@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  # Servicio de PHP
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agrocapital-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - agrocapital
+
+  # Servicio de Nginx
+  web:
+    image: nginx:alpine
+    container_name: agrocapital-web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - agrocapital
+
+  # Servicio de MySQL
+  db:
+    image: mysql:8.0
+    container_name: agrocapital-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - agrocapital
+
+networks:
+  agrocapital:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
